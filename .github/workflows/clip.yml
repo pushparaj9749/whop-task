@@ -1,4 +1,4 @@
-name: Clip Pipeline
+name: Full Clip Pipeline
 
 on:
   push:
@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -32,3 +34,15 @@ jobs:
       - name: Download Episode 1 from Google Drive
         run: |
           python -c "import gdown; gdown.download(id='1_BAuSAmX1qYwz9hLSiIyON0lzi7KTLUx', output='episode.mp4', quiet=False)"
+
+      - name: Run full clip pipeline (transcribe + render + subtitles)
+        run: |
+          python clip_pipeline.py
+
+      - name: Commit outputs back to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add clips/ work/transcript.json
+          git commit -m "Add rendered vertical clips, subtitles, and captions" || echo "No changes to commit"
+          git push
